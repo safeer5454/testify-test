@@ -45,7 +45,7 @@ export class AssessmentsService {
       <b>${sendInviteDto.assessmentId} you have been invited for this quiz. Click the link below to take the assessment:</b>
     </p>
     <p>
-      <a href="http://localhost:3000/assessmentLogin?id=${sendInviteDto.assessmentId}" style="display: inline-block; padding: 10px 20px; background-color: #0a2366; color: #fff; text-decoration: none; border-radius: 5px;">Take Assessment</a>
+      <a href="https://master.d29aygk1p5g97c.amplifyapp.com/assessmentLogin?id=${sendInviteDto.assessmentId}" style="display: inline-block; padding: 10px 20px; background-color: #0a2366; color: #fff; text-decoration: none; border-radius: 5px;">Take Assessment</a>
     </p>
   `;
 try {
