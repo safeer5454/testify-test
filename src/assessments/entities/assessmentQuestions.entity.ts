@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   Column,
   Entity,
@@ -6,31 +6,31 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-} from 'typeorm';
+} from "typeorm";
 // import { BaseModel } from "~/common/entities/baseModel.entity";
 // import { QUESTION_TYPE } from "~/common/enums";
-import { BaseModel } from 'src/common/entities/baseModel.entity';
-import { Assessment } from './assessment.entity';
-import { AssessmentQuestionOption } from './assessmentQuestionsOption.entity';
-import { Answers } from './answers.entity';
+import { BaseModel } from "src/common/entities/baseModel.entity";
+import { Assessment } from "./assessment.entity";
+import { AssessmentQuestionOption } from "./assessmentQuestionsOption.entity";
+import { Answers } from "./answers.entity";
 
 @Entity()
 export class AssessmentQuestion extends BaseModel {
   @ApiProperty({
     required: false,
-    description: 'Assessment',
+    description: "Assessment",
   })
   @Index()
   @ManyToOne(() => Assessment, (assessment) => assessment.id, {
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   })
   assessment: Assessment;
 
   @ApiProperty({
     required: false,
-    description: 'questions',
+    description: "questions",
   })
-  @Column({ nullable: false, type: 'text' })
+  @Column({ nullable: false, type: "text" })
   question: string;
 
   // @ApiProperty({
@@ -53,45 +53,27 @@ export class AssessmentQuestion extends BaseModel {
 
   @ApiProperty({
     required: false,
-    description: 'options',
+    description: "options",
   })
   @OneToMany(
     () => AssessmentQuestionOption,
     (assessmentQuestionOption) => assessmentQuestionOption.assessmentQuestion,
     {
       cascade: true,
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
-    },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+    }
   )
   @JoinColumn()
   assessmentQuestionOptions: AssessmentQuestionOption[];
 
-  @OneToMany(
-    () => Answers,
-    (answers) => answers.question,
-    // {
-    //   cascade: true,
-    //   onUpdate: 'CASCADE',
-    //   onDelete: 'CASCADE',
-    // },
-  )
-  // @JoinColumn()
+  @OneToMany(() => Answers, (answers) => answers.question)
   answer: Answers;
 
-  // @ApiProperty({
-  //   required: false,
-  //   description: "key",
-  // })
-  // @Column({ type: "text", nullable: true })
-  // key: string;
-
-  // @AfterLoad()
-  // @AfterInsert()
-  // @AfterUpdate()
-  // generateKey(): void {
-  //   if (!this.key) {
-  //     this.key = this.question.toLowerCase()?.split(" ")?.join("_");
-  //   }
-  // }
+  @ApiProperty({
+    required: false,
+    description: "image for question",
+  })
+  @Column({ nullable: true })
+  image: string;
 }

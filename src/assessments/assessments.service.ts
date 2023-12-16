@@ -1,14 +1,20 @@
-import { HttpStatus, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, In, Repository, getManager } from 'typeorm';
-import { CreateAssessmentDto } from './dto/create-assessment.dto';
-import { UpdateAssessmentDto } from './dto/update-assessment.dto';
-import { Assessment } from './entities/assessment.entity';
-import { MailerService } from '@nestjs-modules/mailer';
-import { SendInviteDto } from './dto/sendInvite.dto';
-import * as postmark from 'postmark';
-import { AnswerDto } from './dto/answer.dto';
-import { Answers } from './entities/answers.entity';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, EntityManager, In, Repository, getManager } from "typeorm";
+import { CreateAssessmentDto } from "./dto/create-assessment.dto";
+import { UpdateAssessmentDto } from "./dto/update-assessment.dto";
+import { Assessment } from "./entities/assessment.entity";
+import { MailerService } from "@nestjs-modules/mailer";
+import { SendInviteDto } from "./dto/sendInvite.dto";
+import * as postmark from "postmark";
+import { AnswerDto } from "./dto/answer.dto";
+import { Answers } from "./entities/answers.entity";
+import { AssessmentQuestion } from "./entities/assessmentQuestions.entity";
 
 @Injectable()
 export class AssessmentsService {
@@ -19,16 +25,23 @@ export class AssessmentsService {
     private assessmentRepository: Repository<Assessment>,
     private readonly mailerService: MailerService,
     @InjectRepository(Answers)
-    private answerRepository: Repository<Answers>,
+    private answerRepository: Repository<Answers>
   ) {
     this.client = new postmark.ServerClient(
-      '701b853e-3624-4763-bd5b-5ae99d8aa0f7',
+      "701b853e-3624-4763-bd5b-5ae99d8aa0f7"
     );
   }
 
   async create(createAssessmentDto: CreateAssessmentDto, userId: string) {
     const newAssessment = this.assessmentRepository.create({
-      ...createAssessmentDto,
+      topic: createAssessmentDto.topic,
+      questionType: createAssessmentDto.questionType,
+      language: createAssessmentDto.language,
+      method: createAssessmentDto.method,
+      timeLimit: createAssessmentDto.timeLimit,
+      instructions: createAssessmentDto.instructions,
+      assessmentQuestions:
+        createAssessmentDto.assessmentQuestions as AssessmentQuestion[],
       numberOfQuestions: createAssessmentDto.assessmentQuestions.length,
       createdBy: { id: userId },
     });
@@ -48,23 +61,23 @@ export class AssessmentsService {
       <a href="https://master.d29aygk1p5g97c.amplifyapp.com/assessmentLogin?id=${sendInviteDto.assessmentId}" style="display: inline-block; padding: 10px 20px; background-color: #0a2366; color: #fff; text-decoration: none; border-radius: 5px;">Take Assessment</a>
     </p>
   `;
-try {
-  this.mailerService.sendMail({
-    to: sendInviteDto.email,
-    from: 'abc@gmail.com',
-    subject: 'Testing email service',
-    text: 'Welcome to testify-client application', // You can provide a plain text version as well
-    html: emailContent,
-  });
-  return 'invite sent successfully'
-} catch (error) {
-  throw new UnprocessableEntityException({
-    status: HttpStatus.UNPROCESSABLE_ENTITY,
-    error: "something bad happened with invite",
-  });
-}
-    
-//FIXME: will use postmark for sending emails in prod
+    try {
+      this.mailerService.sendMail({
+        to: sendInviteDto.email,
+        from: "abc@gmail.com",
+        subject: "Testing email service",
+        text: "Welcome to testify-client application", // You can provide a plain text version as well
+        html: emailContent,
+      });
+      return "invite sent successfully";
+    } catch (error) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        error: "something bad happened with invite",
+      });
+    }
+
+    //FIXME: will use postmark for sending emails in prod
     // this.mailerService.sendMail({
     //   to: sendInviteDto.email,
     //   from: 'safeerahmad5454@gmail.com',
@@ -94,9 +107,9 @@ try {
     });
   }
 
-  async findByUserId(id:string) {
+  async findByUserId(id: string) {
     return await this.assessmentRepository.find({
-      where:{createdBy:[{id:id}]},
+      where: { createdBy: [{ id: id }] },
       relations: { assessmentQuestions: { assessmentQuestionOptions: true } },
     });
   }
@@ -118,7 +131,7 @@ try {
     }
     const updatedAssessment = { ...existingAssessment };
     updatedAssessment.assessmentQuestions =
-      updateAssessmentDto.assessmentQuestions;
+      updateAssessmentDto.assessmentQuestions as AssessmentQuestion[];;
 
     const savedAssessment =
       await this.assessmentRepository.save(updatedAssessment);
@@ -149,7 +162,7 @@ try {
     }));
     let isCorrectCount = 0;
     const percentage = result.map(
-      (resultRecord) => resultRecord.isCorrect && isCorrectCount++,
+      (resultRecord) => resultRecord.isCorrect && isCorrectCount++
     );
     return {
       result: formattedData,
@@ -159,7 +172,7 @@ try {
 
   async checkIfUserAlreadyTakenAssessment(
     assessmentId: string,
-    userId: string,
+    userId: string
   ) {
     const result = await this.answerRepository.find({
       where: { assessment: { id: assessmentId }, user: { id: userId } },
@@ -190,7 +203,7 @@ try {
       GROUP BY answer."assessmentId", answer."userId",
       usr."firstName", ass."numberOfQuestions",
       ass."topic", usr."lastName", ass."questionType"`,
-      [assessmentIds],
+      [assessmentIds]
     );
     return data;
   }
@@ -209,7 +222,7 @@ try {
       GROUP BY answer."assessmentId", answer."userId",
       usr."firstName", ass."numberOfQuestions",
       ass."topic", usr."lastName", usr."email", ass."questionType", ass."method"`,
-      [assessmentId, userId],
+      [assessmentId, userId]
     );
 
     // FIXME: Need to handle the  null values, for unanswered questions by user
@@ -224,7 +237,7 @@ try {
       LEFT JOIN "assessment_question_option" AS userOption ON answer."optionId" = userOption."id"
       LEFT JOIN "assessment_question_option" AS correctOption ON questions."id" = correctOption."assessmentQuestionId" AND correctOption."isCorrect" = true
       WHERE questions."assessmentId" = ($1)`,
-      [assessmentId, userId],
+      [assessmentId, userId]
     );
 
     return {
