@@ -25,6 +25,7 @@ import { diskStorage } from "multer";
 export class AssessmentsController {
   constructor(private readonly assessmentsService: AssessmentsService) {}
   @UseGuards(AuthGuard)
+  @Post()
   @UseInterceptors(
     FilesInterceptor("images", 30, {
       storage: diskStorage({
@@ -79,27 +80,26 @@ export class AssessmentsController {
   findOne(@Param("id") id: string) {
     return this.assessmentsService.findOne(id);
   }
-  @Patch(':id')
+  @Patch(":id")
   @UseInterceptors(
-    FilesInterceptor('images', 30, {
+    FilesInterceptor("images", 30, {
       storage: diskStorage({
-        destination: './uploads',
+        destination: "./uploads",
         filename(req, file, callback) {
           // const formatedName = `${file.originalname}-item`;
           callback(null, file.originalname);
         },
       }),
-    }),
+    })
   )
   update(
     @UploadedFiles() files: Array<Express.Multer.File>,
-    @Param('id') id: string,
-    @Body() updateAssessmentDto: UpdateAssessmentDto,
+    @Param("id") id: string,
+    @Body() updateAssessmentDto: UpdateAssessmentDto
   ) {
-   
-    if (typeof updateAssessmentDto.assessmentQuestions === 'string') {
+    if (typeof updateAssessmentDto.assessmentQuestions === "string") {
       updateAssessmentDto.assessmentQuestions = JSON.parse(
-        updateAssessmentDto.assessmentQuestions,
+        updateAssessmentDto.assessmentQuestions
       );
     }
     return this.assessmentsService.update(id, updateAssessmentDto);
